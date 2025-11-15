@@ -1,11 +1,11 @@
-# Auto Clicker (Fabric)
+# Autoclicker mod (Legacy)
 
 Quick and dirty Auto Clicker mod for Fabric(mc)
 
 [![Downloads](http://cf.way2muchnoise.eu/full_445095_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/auto-clicker-fabric)
 [![Versions Supported](http://cf.way2muchnoise.eu/versions/445095.svg)](https://www.curseforge.com/minecraft/mc-mods/auto-clicker-fabric)
-[![GitHub license](https://img.shields.io/github/license/AdvancedXRay/Auto-Clicker-Fabric)](https://github.com/AdvancedXRay/Auto-Clicker-Fabric/blob/main/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/AdvancedXRay/Auto-Clicker-Fabric)](https://github.com/AdvancedXRay/Auto-Clicker-Fabric/issues)
+[![GitHub license](https://img.shields.io/github/license/azkich/Auto-Clicker-Legacy)](https://github.com/azkich/Auto-Clicker-Legacy/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/azkich/Auto-Clicker-Legacy)](https://github.com/azkich/Auto-Clicker-Legacy/issues)
 
 ## Features
 - Auto click (hold & spam) for Right and Left click

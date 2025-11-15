@@ -17,7 +17,10 @@ public enum Language {
     GUI_RESPECT_SHIELD("autoclicker-fabric.gui.shield"),
     GUI_MOB_MODE("autoclicker-fabric.gui.mob-mode"),
     GUI_HUD_ENABLED("autoclicker-fabric.gui.hud-enabled"),
-    GUI_HUD_LOCATION("autoclicker-fabric.gui.hud-location");
+    GUI_HUD_LOCATION("autoclicker-fabric.gui.hud-location"),
+    GUI_DISABLE_AFTER_DEATH("autoclicker-fabric.gui.disable-after-death"),
+    GUI_DISABLE_AFTER_DISCONNECT("autoclicker-fabric.gui.disable-after-disconnect"),
+    GUI_DISABLE_AFTER_RELOAD_SCREEN("autoclicker-fabric.gui.disable-after-reload-screen");
 
     private final String key;
     MutableComponent text;

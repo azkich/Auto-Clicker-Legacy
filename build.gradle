@@ -147,7 +147,7 @@ publishMods {
         additionalFiles.from project.provider { project(":fabric").tasks.remapJar }.flatMap { it.archiveFile }
         additionalFiles.from project.provider { project(":common").tasks.remapJar }.flatMap { it.archiveFile }
 
-        repository = "AdvancedXRay/Auto-Clicker"
+        repository = "azkich/Auto-Clicker-Legacy"
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
         commitish = providers.environmentVariable("GITHUB_SHA").orElse("main")
         tagName = providers.environmentVariable("GITHUB_REF_NAME").orElse("v${mod_version}")

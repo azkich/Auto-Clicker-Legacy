@@ -1,13 +1,13 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-issueTrackerURL = "https://github.com/advancedxray/auto-clicker/issues"
+issueTrackerURL = "https://github.com/azkich/Auto-Clicker-Legacy/issues"
 license = "MIT"
 
 [[mods]]
 modId = "autoclicker"
 version = "${version}"
-displayName = "Auto Clicker"
-authors = "ErrorMikey"
+displayName = "Autoclicker mod (Legacy)"
+authors = "ErrorMikey (Original), Advanced XRay team (Original), Azkich (Fork)"
 description = '''
 Automatically left and right clicks for you, how kind!
 '''

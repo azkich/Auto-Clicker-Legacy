@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "id": "autoclicker",
   "version": "${version}",
-  "name": "Auto Clicker",
+  "name": "Autoclicker mod (Legacy)",
   "description": "Automatically left and right clicks for you, how kind!",
   "authors": [
-    "ErrorMikey",
-    "Advanced XRay team"
+    "ErrorMikey (Original)",
+    "Advanced XRay team (Original)",
+    "Azkich (Fork)"
   ],
   "contact": {
-    "homepage": "https://mikey.pro/",
-    "sources": "https://github.com/advancedxray/auto-clicker",
-    "issues": "https://github.com/advancedxray/auto-clicker/issues"
+    "homepage": "https://github.com/azkich/Auto-Clicker-Legacy",
+    "sources": "https://github.com/azkich/Auto-Clicker-Legacy",
+    "issues": "https://github.com/azkich/Auto-Clicker-Legacy/issues"
   },
   "license": "MIT",
   "icon": "assets/autoclicker/icon.png",

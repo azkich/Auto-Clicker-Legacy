@@ -13,30 +13,6 @@ public class Holding {
         this.timeout = config.getCpt();
     }
 
-    public boolean isRespectCooldown() {
-        return this.config instanceof Config.LeftMouseConfig && ((Config.LeftMouseConfig) this.config).isRespectCooldown();
-    }
-
-    public void setRespectCooldown(boolean respectCooldown) {
-        if (!(this.config instanceof Config.LeftMouseConfig)) {
-            return;
-        }
-
-        ((Config.LeftMouseConfig) this.config).setRespectCooldown(respectCooldown);
-    }
-
-    public boolean isRespectShield() {
-        return this.config instanceof Config.LeftMouseConfig && ((Config.LeftMouseConfig) this.config).isRespectShield();
-    }
-
-    public void setRespectShield(boolean respectShield) {
-        if (!(this.config instanceof Config.LeftMouseConfig)) {
-            return;
-        }
-
-        ((Config.LeftMouseConfig) this.config).setRespectShield(respectShield);
-    }
-
     public KeyMapping getKey() {
         return this.key;
     }
@@ -63,6 +39,8 @@ public class Holding {
 
     public void setSpeed(int speed) {
         this.config.setCpt(speed);
+        // Reset timeout when speed changes
+        this.timeout = speed;
     }
 
     public int getTimeout() {
@@ -74,25 +52,15 @@ public class Holding {
     }
 
     public void decreaseTimeout() {
-        if ((this.timeout - 1) < 0) {
-            return;
+        if (this.timeout > 0) {
+            this.timeout -= 1;
         }
-
-        this.timeout -= 1;
     }
 
     public static class AttackHolding extends Holding {
 
         public AttackHolding(KeyMapping key, Config.LeftMouseConfig config) {
             super(key, config);
-        }
-
-        public boolean isMobMode() {
-            return ((Config.LeftMouseConfig) this.config).isMobMode();
-        }
-
-        public void setMobMode(boolean mobMode) {
-            ((Config.LeftMouseConfig) this.config).setMobMode(mobMode);
         }
     }
 }

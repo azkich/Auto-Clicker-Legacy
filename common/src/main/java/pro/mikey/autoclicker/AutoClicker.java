@@ -8,15 +8,12 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -33,12 +30,10 @@ public class AutoClicker {
     public static final String MOD_ID = "autoclicker";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
 
-    private static final KeyMapping.Category KEYBIND_CATEGORY =
-            KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(MOD_ID, "keybinding-title"));
     public static final KeyMapping openConfig =
-            new KeyMapping("keybinding.open-gui", GLFW.GLFW_KEY_O, KEYBIND_CATEGORY);
+            new KeyMapping("keybinding.open-gui", GLFW.GLFW_KEY_O, "key.categories." + MOD_ID);
     public static final KeyMapping toggleHolding =
-            new KeyMapping("keybinding.toggle-hold", GLFW.GLFW_KEY_I, KEYBIND_CATEGORY);
+            new KeyMapping("keybinding.toggle-hold", GLFW.GLFW_KEY_I, "key.categories." + MOD_ID);
 
     private static final Supplier<Pair<Path, Path>> CONFIG_PATHS = Suppliers.memoize(() -> {
         Path configDir = Paths.get(Minecraft.getInstance().gameDirectory.getPath() + "/config");
@@ -53,10 +48,10 @@ public class AutoClicker {
     private static AutoClicker INSTANCE;
     private boolean isActive = false;
     private Config config = new Config(
-            new Config.LeftMouseConfig(false, false, 0, false, false, false),
+            new Config.LeftMouseConfig(false, false, 0),
             new Config.RightMouseConfig(false, false, 0),
             new Config.JumpConfig(false, false, 0),
-            new Config.HudConfig(true, "top-left")
+            new Config.HudConfig(true, "top-left", false, false, false)
     );
 
     public AutoClicker() {
@@ -166,9 +161,34 @@ public class AutoClicker {
 
     public void clientTickEvent(Minecraft mc) {
         if (mc.player == null || mc.level == null) {
+            // Check for disconnect
+            if (hudConfig.isDisableAfterDisconnect() && this.isActive) {
+                this.isActive = false;
+                if(leftHolding.isActive()) leftHolding.getKey().setDown(false);
+                if(rightHolding.isActive()) rightHolding.getKey().setDown(false);
+                if(jumpHolding.isActive()) jumpHolding.getKey().setDown(false);
+            }
             return;
         }
-        if(!mc.player.isAlive()) this.isActive = false;
+        
+        // Check for death
+        if (!mc.player.isAlive() && hudConfig.isDisableAfterDeath() && this.isActive) {
+            this.isActive = false;
+            if(leftHolding.isActive()) leftHolding.getKey().setDown(false);
+            if(rightHolding.isActive()) rightHolding.getKey().setDown(false);
+            if(jumpHolding.isActive()) jumpHolding.getKey().setDown(false);
+        }
+        
+        // Check for reload screen (Downloading terrain or similar)
+        if (hudConfig.isDisableAfterReloadScreen() && this.isActive && mc.screen != null) {
+            String screenName = mc.screen.getClass().getSimpleName();
+            if (screenName.contains("Downloading") || screenName.contains("Receiving") || screenName.contains("Loading")) {
+                this.isActive = false;
+                if(leftHolding.isActive()) leftHolding.getKey().setDown(false);
+                if(rightHolding.isActive()) rightHolding.getKey().setDown(false);
+                if(jumpHolding.isActive()) jumpHolding.getKey().setDown(false);
+            }
+        }
 
         if (this.isActive) {
             if (leftHolding.isActive()) {
@@ -196,81 +216,79 @@ public class AutoClicker {
         if (key.isSpamming()) {
             // How to handle the click if it's done by spamming
             if (key.getSpeed() > 0) {
-                if (key.getTimeout() <= 1) {
-                    if (key.getTimeout() <= 0) {
-                        key.resetTimeout();
-                    }
-
-                    // Press the button twice by toggling 1 and 0
-                    key.getKey().setDown(key.getTimeout() == 1);
-
-                    if (key.getKey().isDown()) {
-                        this.attemptMobAttack(mc, key);
-                    }
-                }
+                // Decrease timeout first
                 key.decreaseTimeout();
+                
+                // When timeout reaches 0, perform click and reset
+                if (key.getTimeout() <= 0) {
+                    // Press the button twice by toggling 1 and 0
+                    key.getKey().setDown(true);
+                    // Perform action based on key type
+                    if (key.getKey() == leftHolding.getKey()) {
+                        this.performLeftClickAction(mc);
+                    } else if (key.getKey() == rightHolding.getKey()) {
+                        this.performRightClickAction(mc);
+                    }
+                    key.getKey().setDown(false);
+                    key.resetTimeout();
+                }
             } else {
-                // Handle the click if it's done normally
+                // Handle the click if it's done normally (speed = 0, no delay)
                 key.getKey().setDown(!key.getKey().isDown());
+                // Perform action based on key type when pressed
                 if (key.getKey().isDown()) {
-                    this.attemptMobAttack(mc, key);
+                    if (key.getKey() == leftHolding.getKey()) {
+                        this.performLeftClickAction(mc);
+                    } else if (key.getKey() == rightHolding.getKey()) {
+                        this.performRightClickAction(mc);
+                    }
                 }
             }
 
             return;
         }
 
-        // Normal holding or cool down behaviour
-        // respect cool down
-        if (key.isRespectCooldown()) {
-            // Don't do anything if they're not looking at something
-            if (key instanceof Holding.AttackHolding && ((Holding.AttackHolding) key).isMobMode() && !this.isPlayerLookingAtMob(mc)) {
-                if (key.getKey().isDown()) {
-                    key.getKey().setDown(false);
-                }
-                return;
-            }
-
-            if (mc.player.getAttackStrengthScale(0) == 1.0F) {
-                key.getKey().setDown(true);
-                this.attemptMobAttack(mc, key);
-            } else {
-                key.getKey().setDown(false);
-            }
-        } else {
-            // Hold the click
-            key.getKey().setDown(true);
-        }
+        // Normal holding behaviour
+        // Hold the click
+        key.getKey().setDown(true);
     }
 
-    private void attemptMobAttack(Minecraft mc, Holding key) {
-        // Don't attack on a right click
-        if (key.getKey() != leftHolding.getKey()) {
-            return;
+    private void performLeftClickAction(Minecraft mc) {
+        // Attack by air - always swing hand
+        if (mc.player != null) {
+            mc.player.swing(InteractionHand.MAIN_HAND);
         }
-
+        
+        // Attack entity if present, but always swing regardless
         HitResult rayTrace = mc.hitResult;
         if (rayTrace instanceof EntityHitResult && mc.gameMode != null) {
-            if(!(config.getLeftClick().isRespectShield() && isShielding(mc.player))) {
-                mc.gameMode.attack(mc.player, ((EntityHitResult) rayTrace).getEntity());
-                if (mc.player != null) {
-                    mc.player.swing(InteractionHand.MAIN_HAND);
-                }
-            }
+            mc.gameMode.attack(mc.player, ((EntityHitResult) rayTrace).getEntity());
         }
     }
 
-    private boolean isShielding(LocalPlayer player) {
-        if (player.isUsingItem()) {
-            return player.getUseItem().getItem() instanceof ShieldItem;
+    private void performRightClickAction(Minecraft mc) {
+        if (mc.player == null || mc.gameMode == null) {
+            return;
         }
-        return false;
-    }
 
-    private boolean isPlayerLookingAtMob(Minecraft mc) {
         HitResult rayTrace = mc.hitResult;
-        return rayTrace instanceof EntityHitResult && ((EntityHitResult) rayTrace).getEntity() instanceof LivingEntity livingEntity && livingEntity.isAlive() && livingEntity.isAttackable();
+        
+        // Swing hand
+        mc.player.swing(InteractionHand.MAIN_HAND);
+        
+        // Handle interaction based on what we're looking at
+        if (rayTrace instanceof EntityHitResult entityHit) {
+            // Interact with entity
+            mc.gameMode.interact(mc.player, entityHit.getEntity(), InteractionHand.MAIN_HAND);
+        } else if (rayTrace instanceof BlockHitResult blockHit) {
+            // Interact with block
+            mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
+        } else {
+            // Use item in hand (e.g., eating, drinking, placing blocks in air)
+            mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+        }
     }
+
 
     private void keyInputEvent(Minecraft mc) {
         assert mc.player != null;
@@ -299,3 +317,4 @@ public class AutoClicker {
         return new OptionsScreen();
     }
 }
+

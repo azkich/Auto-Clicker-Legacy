@@ -40,10 +40,16 @@ public class Config {
     public static class HudConfig {
         private boolean enabled;
         private String location;
+        private boolean disableAfterDeath;
+        private boolean disableAfterDisconnect;
+        private boolean disableAfterReloadScreen;
 
-        public HudConfig(Boolean enabled, String location){
+        public HudConfig(Boolean enabled, String location, Boolean disableAfterDeath, Boolean disableAfterDisconnect, Boolean disableAfterReloadScreen){
             this.enabled = enabled;
             this.location = location;
+            this.disableAfterDeath = disableAfterDeath != null ? disableAfterDeath : false;
+            this.disableAfterDisconnect = disableAfterDisconnect != null ? disableAfterDisconnect : false;
+            this.disableAfterReloadScreen = disableAfterReloadScreen != null ? disableAfterReloadScreen : false;
         }
 
         public boolean isEnabled() {
@@ -62,48 +68,44 @@ public class Config {
             this.location = location;
         }
 
+        public boolean isDisableAfterDeath() {
+            return this.disableAfterDeath;
+        }
+
+        public void setDisableAfterDeath(boolean disableAfterDeath) {
+            this.disableAfterDeath = disableAfterDeath;
+        }
+
+        public boolean isDisableAfterDisconnect() {
+            return this.disableAfterDisconnect;
+        }
+
+        public void setDisableAfterDisconnect(boolean disableAfterDisconnect) {
+            this.disableAfterDisconnect = disableAfterDisconnect;
+        }
+
+        public boolean isDisableAfterReloadScreen() {
+            return this.disableAfterReloadScreen;
+        }
+
+        public void setDisableAfterReloadScreen(boolean disableAfterReloadScreen) {
+            this.disableAfterReloadScreen = disableAfterReloadScreen;
+        }
+
         public String toString(){
             return "Config{" +
                     "hudEnabled=" + this.enabled +
                     ", hudLocation=" + this.location +
+                    ", disableAfterDeath=" + this.disableAfterDeath +
+                    ", disableAfterDisconnect=" + this.disableAfterDisconnect +
+                    ", disableAfterReloadScreen=" + this.disableAfterReloadScreen +
                     '}';
         }
     }
 
     public static class LeftMouseConfig extends SharedConfig {
-        private boolean respectCooldown;
-        private boolean respectShield;
-        private boolean mobMode;
-
-        public LeftMouseConfig(boolean active, boolean spamming, int cpt, boolean respectCooldown, boolean respectShield, boolean mobMode) {
+        public LeftMouseConfig(boolean active, boolean spamming, int cpt) {
             super(active, spamming, cpt);
-
-            this.respectCooldown = respectCooldown;
-            this.mobMode = mobMode;
-        }
-
-        public boolean isRespectCooldown() {
-            return this.respectCooldown;
-        }
-
-        public void setRespectCooldown(boolean respectCooldown) {
-            this.respectCooldown = respectCooldown;
-        }
-
-        public boolean isRespectShield() {
-            return this.respectShield;
-        }
-
-        public void setRespectShield(boolean respectShield) {
-            this.respectShield = respectShield;
-        }
-
-        public boolean isMobMode() {
-            return this.mobMode;
-        }
-
-        public void setMobMode(boolean mobMode) {
-            this.mobMode = mobMode;
         }
     }
 

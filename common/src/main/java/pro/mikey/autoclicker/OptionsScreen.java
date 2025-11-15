@@ -7,7 +7,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import org.jetbrains.annotations.Nullable;
@@ -168,39 +167,6 @@ public class OptionsScreen extends Screen {
         this.sliderTooltips.put(this.addRenderableWidget(jumpHoldingSpamSpeed), "autoclicker-fabric.gui.help.spam-speed");
 
         this.buttonTooltips.put(this.addRenderableWidget(
-            Button.builder(
-                Language.GUI_RESPECT_COOLDOWN.getText(AutoClicker.leftHolding.isRespectCooldown()), (button) -> {
-                    AutoClicker.leftHolding.setRespectCooldown(!AutoClicker.leftHolding.isRespectCooldown());
-                    button.setMessage(Language.GUI_RESPECT_COOLDOWN.getText(AutoClicker.leftHolding.isRespectCooldown()));
-                    AutoClicker.getInstance().saveConfig();
-            })
-            .bounds(x - 200, y - 28, 130, 20)
-            .build()
-        ), "autoclicker-fabric.gui.help.cooldown");
-
-        this.buttonTooltips.put(this.addRenderableWidget(
-                Button.builder(
-                                Language.GUI_RESPECT_SHIELD.getText(AutoClicker.leftHolding.isRespectShield()), (button) -> {
-                                    AutoClicker.leftHolding.setRespectShield(!AutoClicker.leftHolding.isRespectShield());
-                                    button.setMessage(Language.GUI_RESPECT_SHIELD.getText(AutoClicker.leftHolding.isRespectShield()));
-                                    AutoClicker.getInstance().saveConfig();
-                                })
-                .bounds(x - 200, y - 6, 130, 20)
-                        .build()
-        ), "autoclicker-fabric.gui.help.shield");
-
-        this.buttonTooltips.put(this.addRenderableWidget(
-            Button.builder(
-              Language.GUI_MOB_MODE.getText(AutoClicker.leftHolding.isMobMode()), (button) -> {
-                    AutoClicker.leftHolding.setMobMode(!AutoClicker.leftHolding.isMobMode());
-                    button.setMessage(Language.GUI_MOB_MODE.getText(AutoClicker.leftHolding.isMobMode()));
-                    AutoClicker.getInstance().saveConfig();
-            })
-            .bounds(x - 200, y + 16, 130, 20)
-            .build()
-        ), "autoclicker-fabric.gui.help.mob-mode");
-
-        this.buttonTooltips.put(this.addRenderableWidget(
                 Button.builder(
                     Language.GUI_HUD_ENABLED.getText(AutoClicker.hudConfig.isEnabled()), (button) -> {
                     AutoClicker.hudConfig.setEnabled(!AutoClicker.hudConfig.isEnabled());
@@ -221,6 +187,39 @@ public class OptionsScreen extends Screen {
                 .bounds(x - 65, y + 60, 130, 20)
                         .build()
         ), "autoclicker-fabric.gui.help.hud-location");
+
+        this.buttonTooltips.put(this.addRenderableWidget(
+                Button.builder(
+                    Language.GUI_DISABLE_AFTER_DEATH.getText(AutoClicker.hudConfig.isDisableAfterDeath()), (button) -> {
+                        AutoClicker.hudConfig.setDisableAfterDeath(!AutoClicker.hudConfig.isDisableAfterDeath());
+                        button.setMessage(Language.GUI_DISABLE_AFTER_DEATH.getText(AutoClicker.hudConfig.isDisableAfterDeath()));
+                        AutoClicker.getInstance().saveConfig();
+                    })
+                .bounds(x - 200, y + 38, 130, 20)
+                        .build()
+        ), "autoclicker-fabric.gui.help.disable-after-death");
+
+        this.buttonTooltips.put(this.addRenderableWidget(
+                Button.builder(
+                    Language.GUI_DISABLE_AFTER_DISCONNECT.getText(AutoClicker.hudConfig.isDisableAfterDisconnect()), (button) -> {
+                        AutoClicker.hudConfig.setDisableAfterDisconnect(!AutoClicker.hudConfig.isDisableAfterDisconnect());
+                        button.setMessage(Language.GUI_DISABLE_AFTER_DISCONNECT.getText(AutoClicker.hudConfig.isDisableAfterDisconnect()));
+                        AutoClicker.getInstance().saveConfig();
+                    })
+                .bounds(x - 200, y + 60, 130, 20)
+                        .build()
+        ), "autoclicker-fabric.gui.help.disable-after-disconnect");
+
+        this.buttonTooltips.put(this.addRenderableWidget(
+                Button.builder(
+                    Language.GUI_DISABLE_AFTER_RELOAD_SCREEN.getText(AutoClicker.hudConfig.isDisableAfterReloadScreen()), (button) -> {
+                        AutoClicker.hudConfig.setDisableAfterReloadScreen(!AutoClicker.hudConfig.isDisableAfterReloadScreen());
+                        button.setMessage(Language.GUI_DISABLE_AFTER_RELOAD_SCREEN.getText(AutoClicker.hudConfig.isDisableAfterReloadScreen()));
+                        AutoClicker.getInstance().saveConfig();
+                    })
+                .bounds(x - 200, y + 82, 130, 20)
+                        .build()
+        ), "autoclicker-fabric.gui.help.disable-after-reload-screen");
     }
 
     private String getNextLocation(String currentLocation){
@@ -269,14 +268,13 @@ public class OptionsScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent event) {
-        int keyCode = event.key();
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == AutoClicker.openConfig.getDefaultKey().getValue()) {
             this.onClose();
             return true;
         }
 
-        return super.keyPressed(event);
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
