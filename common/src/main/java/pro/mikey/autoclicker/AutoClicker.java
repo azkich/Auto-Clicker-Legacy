@@ -11,6 +11,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -221,26 +223,60 @@ public class AutoClicker {
                 
                 // When timeout reaches 0, perform click and reset
                 if (key.getTimeout() <= 0) {
-                    // Press the button twice by toggling 1 and 0
-                    key.getKey().setDown(true);
-                    // Perform action based on key type
-                    if (key.getKey() == leftHolding.getKey()) {
-                        this.performLeftClickAction(mc);
-                    } else if (key.getKey() == rightHolding.getKey()) {
-                        this.performRightClickAction(mc);
+                    // For right click, check if we should allow the click
+                    boolean shouldClick = true;
+                    if (key.getKey() == rightHolding.getKey()) {
+                        HitResult rayTrace = mc.hitResult;
+                        ItemStack itemInHand = mc.player.getItemInHand(InteractionHand.MAIN_HAND);
+                        boolean isBlockItem = itemInHand.getItem() instanceof BlockItem;
+                        
+                        // Don't allow clicking if holding block and looking at air
+                        if (isBlockItem && (rayTrace == null || rayTrace.getType() == HitResult.Type.MISS)) {
+                            shouldClick = false;
+                        }
                     }
-                    key.getKey().setDown(false);
+                    
+                    if (shouldClick) {
+                        // Press the button twice by toggling 1 and 0
+                        key.getKey().setDown(true);
+                        // Perform action based on key type
+                        if (key.getKey() == leftHolding.getKey()) {
+                            this.performLeftClickAction(mc);
+                        } else if (key.getKey() == rightHolding.getKey()) {
+                            // For right click, only perform action if looking at block/entity
+                            // Don't allow placing blocks in air
+                            this.performRightClickAction(mc);
+                        }
+                        key.getKey().setDown(false);
+                    }
                     key.resetTimeout();
                 }
             } else {
                 // Handle the click if it's done normally (speed = 0, no delay)
-                key.getKey().setDown(!key.getKey().isDown());
-                // Perform action based on key type when pressed
-                if (key.getKey().isDown()) {
-                    if (key.getKey() == leftHolding.getKey()) {
-                        this.performLeftClickAction(mc);
-                    } else if (key.getKey() == rightHolding.getKey()) {
-                        this.performRightClickAction(mc);
+                // For right click, check if we should allow the click
+                boolean shouldClick = true;
+                if (key.getKey() == rightHolding.getKey()) {
+                    HitResult rayTrace = mc.hitResult;
+                    ItemStack itemInHand = mc.player.getItemInHand(InteractionHand.MAIN_HAND);
+                    boolean isBlockItem = itemInHand.getItem() instanceof BlockItem;
+                    
+                    // Don't allow clicking if holding block and looking at air
+                    if (isBlockItem && (rayTrace == null || rayTrace.getType() == HitResult.Type.MISS)) {
+                        shouldClick = false;
+                    }
+                }
+                
+                if (shouldClick) {
+                    key.getKey().setDown(!key.getKey().isDown());
+                    // Perform action based on key type when pressed
+                    if (key.getKey().isDown()) {
+                        if (key.getKey() == leftHolding.getKey()) {
+                            this.performLeftClickAction(mc);
+                        } else if (key.getKey() == rightHolding.getKey()) {
+                            // For right click, only perform action if looking at block/entity
+                            // Don't allow placing blocks in air
+                            this.performRightClickAction(mc);
+                        }
                     }
                 }
             }
@@ -249,8 +285,23 @@ public class AutoClicker {
         }
 
         // Normal holding behaviour
-        // Hold the click
-        key.getKey().setDown(true);
+        // For right click, only hold if looking at block/entity or holding non-block item
+        if (key.getKey() == rightHolding.getKey()) {
+            HitResult rayTrace = mc.hitResult;
+            ItemStack itemInHand = mc.player.getItemInHand(InteractionHand.MAIN_HAND);
+            boolean isBlockItem = itemInHand.getItem() instanceof BlockItem;
+            
+            // Only hold right click if:
+            // 1. Looking at block/entity, OR
+            // 2. Holding non-block item (food, potions, etc.)
+            if (rayTrace instanceof EntityHitResult || rayTrace instanceof BlockHitResult || !isBlockItem) {
+                key.getKey().setDown(true);
+            }
+            // If holding block and looking at air, don't hold - prevents placing blocks in air
+        } else {
+            // For left click and jump, always hold
+            key.getKey().setDown(true);
+        }
     }
 
     private void performLeftClickAction(Minecraft mc) {
@@ -272,20 +323,28 @@ public class AutoClicker {
         }
 
         HitResult rayTrace = mc.hitResult;
+        ItemStack itemInHand = mc.player.getItemInHand(InteractionHand.MAIN_HAND);
+        boolean isBlockItem = itemInHand.getItem() instanceof BlockItem;
         
-        // Swing hand
-        mc.player.swing(InteractionHand.MAIN_HAND);
-        
-        // Handle interaction based on what we're looking at
+        // Only perform action if we're looking at something (block or entity)
+        // For blocks: only allow placement on existing blocks, not in air
+        // For consumables (food, potions): allow use in air
         if (rayTrace instanceof EntityHitResult entityHit) {
-            // Interact with entity
+            // Swing hand and interact with entity
+            mc.player.swing(InteractionHand.MAIN_HAND);
             mc.gameMode.interact(mc.player, entityHit.getEntity(), InteractionHand.MAIN_HAND);
         } else if (rayTrace instanceof BlockHitResult blockHit) {
-            // Interact with block
+            // Swing hand and interact with block (placing blocks on blocks is allowed)
+            mc.player.swing(InteractionHand.MAIN_HAND);
             mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, blockHit);
-        } else {
-            // Use item in hand (e.g., eating, drinking, placing blocks in air)
-            mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+        } else if (rayTrace == null || rayTrace.getType() == HitResult.Type.MISS) {
+            // Looking at air
+            if (!isBlockItem) {
+                // Allow using consumables (food, potions) in air
+                mc.player.swing(InteractionHand.MAIN_HAND);
+                mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
+            }
+            // If holding a block, do nothing - don't allow placing blocks in air
         }
     }
 
